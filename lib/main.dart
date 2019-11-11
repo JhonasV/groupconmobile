@@ -6,16 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
-  SharedPreferences sharedPreferences;
-
-  _isAutenticated() async {
-    sharedPreferences = await SharedPreferences.getInstance();
-    if (sharedPreferences.getString('token') == null) {
-      return true;
-    }
-    return false;
-  }
-
   _renderHomeScreen() {}
 
   // This widget is the root of your application.
@@ -28,7 +18,7 @@ class MyApp extends StatelessWidget {
       ),
       home: HomeScreen(),
       routes: {
-        HomeScreen.id: (context) => HomeScreen(autenticated: _isAutenticated()),
+        HomeScreen.id: (context) => HomeScreen(),
         LoginScreen.id: (context) => LoginScreen(),
       },
       debugShowCheckedModeBanner: false,

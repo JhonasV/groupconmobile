@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:groupcon01/screens/home_screen.dart';
-import 'package:groupcon01/services/AuthService.dart';
+
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -16,29 +19,26 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isLoading = false;
   void _submitForm() async {
     if (_key.currentState.validate()) {
-      print(_email.text);
-      print(_password.text);
-      isLoading = true;
+      setState(() => isLoading = true);
       //TODO: AuthService.Login(_email, _password);
-      var token = AuthService.login(_email.text, _password.text);
-      if (token != null) {
+      var response = await http.post('http://10.0.2.2:5000/api/v1/auth/login',
+          body: {'email': _email.text, 'password': _password.text});
+
+      if (response.statusCode == 200) {
+        var jsonData = json.decode(response.body);
+        String token = jsonData['token'];
         SharedPreferences sharedPreferences =
             await SharedPreferences.getInstance();
-        // sharedPreferences.setString('token', token);
-        FutureBuilder(
-          future: token,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              setState(() {
-                isLoading = false;
-                sharedPreferences.setString('token', snapshot.data);
-                Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (context) => HomeScreen()),
-                    (Route<dynamic> route) => false);
-              });
-            }
-          },
-        );
+        sharedPreferences.setString('token', token);
+        setState(() {
+          isLoading = false;
+
+          Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => HomeScreen()),
+              (Route<dynamic> route) => false);
+        });
+      } else {
+        print(response.body);
       }
     }
   }
@@ -59,21 +59,21 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Form(
             key: _key,
             child: SingleChildScrollView(
-              child: Column(
-                children: <Widget>[
-                  isLoading
-                      ? Center(
-                          child: CircularProgressIndicator(),
-                        )
-                      : SizedBox.shrink(),
-                  SizedBox(height: 130.0),
-                  _buildEmailTextField(),
-                  SizedBox(height: 30.0),
-                  _buildPasswordTextField(),
-                  SizedBox(height: 30.0),
-                  _buildFormFlatButton(),
-                ],
-              ),
+              child: isLoading
+                  ? Center(
+                      child: CircularProgressIndicator(),
+                    )
+                  : Column(
+                      children: <Widget>[
+                        SizedBox.shrink(),
+                        SizedBox(height: 130.0),
+                        _buildEmailTextField(),
+                        SizedBox(height: 30.0),
+                        _buildPasswordTextField(),
+                        SizedBox(height: 30.0),
+                        _buildFormFlatButton(),
+                      ],
+                    ),
             ),
           ),
         ),
@@ -101,12 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 fontWeight: FontWeight.bold,
                 fontSize: 18.0),
           ),
-          onPressed: () {
-            setState(() {
-              isLoading = true;
-            });
-            _submitForm();
-          },
+          onPressed: () => _submitForm(),
         ),
       ),
     );

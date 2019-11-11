@@ -1,27 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:groupcon01/models/group.dart';
 import 'package:groupcon01/screens/login_screen.dart';
 import 'package:groupcon01/services/GroupService.dart';
 import 'package:groupcon01/widgets/group_card.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   static final String id = "home_screen";
-  final bool autenticated;
-  HomeScreen({this.autenticated});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  Future<List<Group>> latestGroups;
+  Future<List<Group>> groups;
+
+  SharedPreferences sharedPreferences;
+  bool isAutenticated = false;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    latestGroups = GroupService.fetchLatestsGroups();
-    print('Is autenticated?');
-    print(widget.autenticated);
+    groups = GroupService.fetchLatestsGroups();
   }
 
   @override
@@ -32,13 +33,8 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Colors.blue,
       ),
       drawer: Drawer(
-        // Add a ListView to the drawer. This ensures the user can scroll
-        // through the options in the drawer if there isn't enough vertical
-        // space to fit everything.
         child: ListView(
-          // Important: Remove any padding from the ListView.
           padding: EdgeInsets.zero,
-
           children: <Widget>[
             Container(
               height: 100.0,
@@ -64,41 +60,40 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               trailing: Icon(Icons.chevron_right),
               onTap: () {
-                // Update the state of the app
-                // ...
-                // Then close the drawer
                 Navigator.pop(context);
               },
             ),
-            ListTile(
-              leading: Icon(Icons.person_pin),
-              trailing: Icon(Icons.chevron_right),
-              title: Text(
-                'Login',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
-              ),
-              onTap: () {
-                // Update the state of the app
-                // ...
-                // Then close the drawer
-                Navigator.pop(context);
-                Navigator.pushNamed(context, LoginScreen.id);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.group_add),
-              trailing: Icon(Icons.chevron_right),
-              title: Text(
-                'SignIn',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
-              ),
-              onTap: () {
-                // Update the state of the app
-                // ...
-                // Then close the drawer
-                Navigator.pop(context);
-              },
-            ),
+            isAutenticated
+                ? SizedBox.shrink()
+                : Column(
+                    children: <Widget>[
+                      ListTile(
+                        leading: Icon(Icons.person_pin),
+                        trailing: Icon(Icons.chevron_right),
+                        title: Text(
+                          'Login',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 20.0),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.pushNamed(context, LoginScreen.id);
+                        },
+                      ),
+                      ListTile(
+                        leading: Icon(Icons.group_add),
+                        trailing: Icon(Icons.chevron_right),
+                        title: Text(
+                          'SignIn',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 20.0),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ],
+                  ),
           ],
         ),
       ),
@@ -111,16 +106,12 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         child: Container(
           height: double.infinity,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                _buildHeaderWithTextField(),
-                _buildItemsTitle(),
-                _buildCardGroups(),
-              ],
-            ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Expanded(child: _buildCardGroups()),
+            ],
           ),
         ),
       ),
@@ -129,16 +120,22 @@ class _HomeScreenState extends State<HomeScreen> {
 
   FutureBuilder<List<Group>> _buildCardGroups() {
     return FutureBuilder(
-      future: latestGroups,
+      future: groups,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          List<Group> latestGroups = snapshot.data;
-          return Column(
-              children: latestGroups
-                  .map((group) => GroupCard(
-                        group: group,
-                      ))
-                  .toList());
+          var groupList = snapshot.data;
+
+          var cards = Column(
+              children:
+                  groupList.map((group) => GroupCard(group: group)).toList());
+          var items = [_buildHeaderWithTextField(), _buildItemsTitle(), cards];
+
+          return ListView.builder(
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              return items[index];
+            },
+          );
         } else if (snapshot.hasError) {
           return Column(
             children: <Widget>[Text('${snapshot.error}')],
@@ -182,17 +179,22 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: <Widget>[
                     Icon(
-                      Icons.fastfood,
+                      FontAwesomeIcons.whatsapp,
                       color: Colors.white,
                       size: 50.0,
                     ),
                     Icon(
-                      Icons.favorite,
+                      FontAwesomeIcons.telegram,
                       color: Colors.white,
                       size: 50.0,
                     ),
                     Icon(
-                      Icons.face,
+                      FontAwesomeIcons.facebook,
+                      color: Colors.white,
+                      size: 50.0,
+                    ),
+                    Icon(
+                      FontAwesomeIcons.slack,
                       color: Colors.white,
                       size: 50.0,
                     ),
