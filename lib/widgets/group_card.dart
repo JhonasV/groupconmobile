@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:groupcon01/models/group.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class GroupCard extends StatelessWidget {
   final Group group;
-
-  const GroupCard({
-    Key key,
-    this.group,
-  }) : super(key: key);
+  final dynamic showEmailDialog;
+  const GroupCard({Key key, this.group, this.showEmailDialog})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -35,9 +34,11 @@ class GroupCard extends StatelessWidget {
               padding: EdgeInsets.only(left: 15.0),
               child: Row(
                 children: <Widget>[
-                  _buildGroupCardButton(
-                      FontAwesomeIcons.arrowCircleRight, "Direct Link"),
-                  _buildGroupCardButton(Icons.email, ""),
+                  _buildGroupCardButtonLink(
+                    FontAwesomeIcons.arrowCircleRight,
+                    "Direct Link",
+                  ),
+                  _buildGroupCardEmailButton(Icons.email, ""),
                   _buildGroupCardButton(FontAwesomeIcons.qrcode, "QR"),
                 ],
               ),
@@ -48,12 +49,54 @@ class GroupCard extends StatelessWidget {
     );
   }
 
+  void _launchURL() async {
+    if (await canLaunch(group.url)) {
+      await launch(group.url);
+    } else {
+      throw "Could not lunch ${group.url}";
+    }
+  }
+
+  Card _buildGroupCardEmailButton(IconData icon, String text) {
+    return Card(
+      elevation: 3.0,
+      color: Colors.green,
+      child: FlatButton(
+        onPressed: () => showEmailDialog(),
+        child: Row(children: [
+          Icon(icon),
+          SizedBox(width: 5.0),
+          Text(text, style: TextStyle(fontWeight: FontWeight.bold))
+        ]),
+        color: Colors.green,
+        textColor: Colors.white,
+      ),
+    );
+  }
+
   Card _buildGroupCardButton(IconData icon, String text) {
     return Card(
       elevation: 3.0,
       color: Colors.green,
       child: FlatButton(
-        onPressed: () {},
+        onPressed: () => null,
+        child: Row(children: [
+          Icon(icon),
+          SizedBox(width: 5.0),
+          Text(text, style: TextStyle(fontWeight: FontWeight.bold))
+        ]),
+        color: Colors.green,
+        textColor: Colors.white,
+      ),
+    );
+  }
+
+  Card _buildGroupCardButtonLink(IconData icon, String text) {
+    return Card(
+      elevation: 3.0,
+      color: Colors.green,
+      child: FlatButton(
+        onPressed: () => _launchURL(),
         child: Row(children: [
           Icon(icon),
           SizedBox(width: 5.0),

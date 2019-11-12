@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:groupcon01/screens/home_screen.dart';
 
 import 'package:http/http.dart' as http;
@@ -50,9 +51,6 @@ class _LoginScreenState extends State<LoginScreen> {
         FocusScope.of(context).unfocus();
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: Text('Login'),
-        ),
         body: Container(
           height: double.infinity,
           width: double.infinity,
@@ -65,8 +63,47 @@ class _LoginScreenState extends State<LoginScreen> {
                     )
                   : Column(
                       children: <Widget>[
+                        SafeArea(
+                          child: Container(
+                            alignment: Alignment.topLeft,
+                            height: 30.0,
+                            width: double.infinity,
+                            child: IconButton(
+                              icon: Icon(Icons.arrow_back),
+                              iconSize: 27.0,
+                              color: Colors.blue,
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Padding(
+                              padding: EdgeInsets.only(top: 80.0),
+                              child: Text(
+                                'GroupCon',
+                                style: TextStyle(
+                                  fontSize: 35.0,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(top: 80.0),
+                              child: Icon(
+                                FontAwesomeIcons.connectdevelop,
+                                size: 35.0,
+                                color: Colors.blue,
+                              ),
+                            ),
+                          ],
+                        ),
                         SizedBox.shrink(),
-                        SizedBox(height: 130.0),
+                        SizedBox(height: 50.0),
                         _buildEmailTextField(),
                         SizedBox(height: 30.0),
                         _buildPasswordTextField(),
