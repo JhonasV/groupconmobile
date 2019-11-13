@@ -19,10 +19,17 @@ class _HomeScreenState extends State<HomeScreen> {
   SharedPreferences sharedPreferences;
   bool isAutenticated = false;
 
+  _isAutenticated() async {
+    sharedPreferences = await SharedPreferences.getInstance();
+    String token = sharedPreferences.getString('token');
+    setState(() => isAutenticated = token != null);
+  }
+
   @override
   void initState() {
     super.initState();
     groups = GroupService.fetchLatestsGroups();
+    _isAutenticated();
   }
 
   @override
@@ -64,36 +71,8 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
             isAutenticated
-                ? SizedBox.shrink()
-                : Column(
-                    children: <Widget>[
-                      ListTile(
-                        leading: Icon(Icons.person_pin),
-                        trailing: Icon(Icons.chevron_right),
-                        title: Text(
-                          'Login',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 20.0),
-                        ),
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.pushNamed(context, LoginScreen.id);
-                        },
-                      ),
-                      ListTile(
-                        leading: Icon(Icons.group_add),
-                        trailing: Icon(Icons.chevron_right),
-                        title: Text(
-                          'SignIn',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 20.0),
-                        ),
-                        onTap: () {
-                          Navigator.pop(context);
-                        },
-                      ),
-                    ],
-                  ),
+                ? _showDrawerMenuAutenticatedOptions()
+                : _showDrawerMenuGuessOptions(),
           ],
         ),
       ),
@@ -118,6 +97,76 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  _logout() async {
+    sharedPreferences = await SharedPreferences.getInstance();
+    sharedPreferences.remove('token');
+    Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+        (Route<dynamic> route) => false);
+  }
+
+  _showDrawerMenuAutenticatedOptions() {
+    return Column(
+      children: <Widget>[
+        ListTile(
+          leading: Icon(FontAwesomeIcons.chartBar),
+          trailing: Icon(Icons.chevron_right),
+          title: Text(
+            'Dashboard',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
+          ),
+          onTap: () {},
+        ),
+        ListTile(
+          leading: Icon(FontAwesomeIcons.plusCircle),
+          trailing: Icon(Icons.chevron_right),
+          title: Text(
+            'New Group',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
+          ),
+          onTap: () {},
+        ),
+        ListTile(
+          leading: Icon(FontAwesomeIcons.signOutAlt),
+          trailing: Icon(Icons.chevron_right),
+          title: Text(
+            'Logout',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
+          ),
+          onTap: () => _logout(),
+        ),
+      ],
+    );
+  }
+
+  _showDrawerMenuGuessOptions() {
+    return Column(
+      children: <Widget>[
+        ListTile(
+          leading: Icon(FontAwesomeIcons.signInAlt),
+          trailing: Icon(Icons.chevron_right),
+          title: Text(
+            'Login',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
+          ),
+          onTap: () {
+            Navigator.pop(context);
+            Navigator.pushNamed(context, LoginScreen.id);
+          },
+        ),
+        ListTile(
+          leading: Icon(FontAwesomeIcons.user),
+          trailing: Icon(Icons.chevron_right),
+          title: Text(
+            'Register',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
+          ),
+          onTap: () {},
+        ),
+      ],
+    );
+  }
+
   FutureBuilder<List<Group>> _buildCardGroups() {
     return FutureBuilder(
       future: groups,
@@ -130,6 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   .map((group) =>
                       GroupCard(group: group, showEmailDialog: showEmailDialog))
                   .toList());
+
           var items = [_buildHeaderWithTextField(), _buildItemsTitle(), cards];
 
           return ListView.builder(

@@ -3,8 +3,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:groupcon01/screens/home_screen.dart';
+import 'package:groupcon01/services/AuthService.dart';
 
 import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -18,28 +20,35 @@ class _LoginScreenState extends State<LoginScreen> {
   TextEditingController _email = TextEditingController();
   TextEditingController _password = TextEditingController();
   bool isLoading = false;
+  String _loginError = '';
   void _submitForm() async {
     if (_key.currentState.validate()) {
       setState(() => isLoading = true);
       //TODO: AuthService.Login(_email, _password);
-      var response = await http.post('http://10.0.2.2:5000/api/v1/auth/login',
-          body: {'email': _email.text, 'password': _password.text});
+      // var response = await http.post('http://10.0.2.2:5000/api/v1/auth/login',
+      //     body: {'email': _email.text, 'password': _password.text});
+      Response response = await AuthService.login(_email.text, _password.text);
 
       if (response.statusCode == 200) {
         var jsonData = json.decode(response.body);
         String token = jsonData['token'];
         SharedPreferences sharedPreferences =
             await SharedPreferences.getInstance();
-        sharedPreferences.setString('token', token);
-        setState(() {
-          isLoading = false;
+        if (token != null) {
+          sharedPreferences.setString('token', token);
 
           Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(builder: (context) => HomeScreen()),
               (Route<dynamic> route) => false);
+        }
+      } else if (response.statusCode == 400) {
+        var jsonData = json.decode(response.body);
+        String error = jsonData['error'];
+
+        setState(() {
+          _loginError = error;
+          isLoading = false;
         });
-      } else {
-        print(response.body);
       }
     }
   }
@@ -56,12 +65,12 @@ class _LoginScreenState extends State<LoginScreen> {
           width: double.infinity,
           child: Form(
             key: _key,
-            child: SingleChildScrollView(
-              child: isLoading
-                  ? Center(
-                      child: CircularProgressIndicator(),
-                    )
-                  : Column(
+            child: isLoading
+                ? Center(
+                    child: CircularProgressIndicator(),
+                  )
+                : SingleChildScrollView(
+                    child: Column(
                       children: <Widget>[
                         SafeArea(
                           child: Container(
@@ -109,9 +118,24 @@ class _LoginScreenState extends State<LoginScreen> {
                         _buildPasswordTextField(),
                         SizedBox(height: 30.0),
                         _buildFormFlatButton(),
+                        SizedBox(height: 20.0),
+                        _loginError != ''
+                            ? Container(
+                                width: 300.0,
+                                height: 40.0,
+                                color: Colors.redAccent[50],
+                                child: Text(
+                                  _loginError,
+                                  style: TextStyle(
+                                      color: Colors.red,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 22.0),
+                                ),
+                              )
+                            : SizedBox.shrink()
                       ],
                     ),
-            ),
+                  ),
           ),
         ),
       ),
