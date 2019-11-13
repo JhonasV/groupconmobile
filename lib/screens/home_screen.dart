@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:groupcon01/models/group.dart';
+import 'package:groupcon01/providers/group_provider.dart';
 import 'package:groupcon01/screens/login_screen.dart';
 import 'package:groupcon01/services/GroupService.dart';
 import 'package:groupcon01/widgets/group_card.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   static final String id = "home_screen";
@@ -15,10 +18,11 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   Future<List<Group>> groups;
+  final emailController = TextEditingController();
 
   SharedPreferences sharedPreferences;
   bool isAutenticated = false;
-
+  static List<Group> auxGroups;
   _isAutenticated() async {
     sharedPreferences = await SharedPreferences.getInstance();
     String token = sharedPreferences.getString('token');
@@ -34,6 +38,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final groupData = Provider.of<GroupProvider>(context);
+    setState(() => auxGroups = groupData.groups);
     return Scaffold(
       appBar: AppBar(
         title: Text('GroupCon'),
@@ -155,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         ),
         ListTile(
-          leading: Icon(FontAwesomeIcons.user),
+          leading: Icon(FontAwesomeIcons.userAlt),
           trailing: Icon(Icons.chevron_right),
           title: Text(
             'Register',
@@ -175,10 +181,8 @@ class _HomeScreenState extends State<HomeScreen> {
           var groupList = snapshot.data;
 
           var cards = Column(
-              children: groupList
-                  .map((group) =>
-                      GroupCard(group: group, showEmailDialog: showEmailDialog))
-                  .toList());
+              children:
+                  groupList.map((group) => GroupCard(group: group)).toList());
 
           var items = [_buildHeaderWithTextField(), _buildItemsTitle(), cards];
 
@@ -258,7 +262,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 40.0,
                 color: Colors.white,
                 width: 410.0,
-                child: TextFormField(
+                child: TextField(
+                  onChanged: (input) {},
                   decoration: InputDecoration(
                       contentPadding: const EdgeInsets.symmetric(vertical: 8.0),
                       hintText: 'Search',
@@ -293,113 +298,6 @@ class _HomeScreenState extends State<HomeScreen> {
         'Latest groups added',
         style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w800),
       ),
-    );
-  }
-
-  showEmailDialog() {
-    final size = MediaQuery.of(context).size;
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            titlePadding: EdgeInsets.all(0),
-            contentPadding: EdgeInsets.all(0),
-            title: _buildAlertDialogTitle(),
-            content: _buildAlertDialogContent(size, context),
-          );
-        });
-  }
-
-  Container _buildAlertDialogContent(Size size, BuildContext context) {
-    return Container(
-      width: size.width * 0.8,
-      height: size.height * 0.4,
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          _buildAlertDialogForm(),
-          Spacer(),
-          _buildAlertDialogCustomFooter(context),
-        ],
-      ),
-    );
-  }
-
-  Padding _buildAlertDialogForm() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 40.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: <Widget>[
-          TextField(
-            keyboardType: TextInputType.emailAddress,
-            decoration: InputDecoration(
-                hintText: 'Email', prefixIcon: Icon(Icons.mail)),
-          ),
-          SizedBox(height: 10.0),
-          Container(
-            width: double.infinity,
-            height: 35.0,
-            child: FlatButton(
-              onPressed: () {},
-              child: Text(
-                'Send',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 17.0),
-              ),
-              color: Colors.blue,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Container _buildAlertDialogCustomFooter(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: 50.0,
-      color: Colors.blue,
-      child: Row(
-        // crossAxisAlignment: CrossAxisAlignment.end,
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Container(
-            width: 120.0,
-            height: 30.0,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(30.0)),
-            ),
-            padding: EdgeInsets.only(right: 10.0),
-            child: FlatButton(
-              color: Colors.white,
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                'Close',
-                style: TextStyle(
-                  color: Colors.black54,
-                  fontSize: 16.0,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Container _buildAlertDialogTitle() {
-    return Container(
-      padding: EdgeInsets.all(15.0),
-      height: 50.0,
-      width: double.infinity,
-      color: Colors.blue,
-      child: Text('Send invite link',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
     );
   }
 }

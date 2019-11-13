@@ -22,25 +22,30 @@ class _LoginScreenState extends State<LoginScreen> {
   void _submitForm() async {
     if (_key.currentState.validate()) {
       setState(() => isLoading = true);
-      //Make http request to login
-      Response response = await AuthService.login(_email.text, _password.text);
 
+      //Make http request to login
+      Map<String, dynamic> response =
+          await AuthService.login(_email.text.trim(), _password.text.trim());
+      int statusCode = response['statusCode'];
+      var body = response['body'];
+
+      dynamic jsonData;
       //Verify if is ok, save the token and redirect to home page
-      if (response.statusCode == 200) {
-        var jsonData = json.decode(response.body);
+      if (statusCode == 200) {
+        jsonData = json.decode(body);
         String token = jsonData['token'];
+
         SharedPreferences sharedPreferences =
             await SharedPreferences.getInstance();
-        if (token != null) {
-          sharedPreferences.setString('token', token);
+        sharedPreferences.setString('token', token);
 
-          Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) => HomeScreen()),
-              (Route<dynamic> route) => false);
-        }
+        Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => HomeScreen()),
+            (Route<dynamic> route) => false);
+
         //Verify input errors
-      } else if (response.statusCode == 400) {
-        var jsonData = json.decode(response.body);
+      } else if (statusCode == 400) {
+        jsonData = json.decode(body);
         String error = jsonData['error'];
 
         setState(() {

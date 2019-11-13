@@ -5,7 +5,8 @@ import 'package:http/http.dart' as http;
 
 class GroupService {
   static Future<List<Group>> fetchLatestsGroups() async {
-    String URL = 'http://10.0.0.10:5000/api/v1/group';
+    // final URL = 'http://192.168.18.2:5000/api/v1/group';
+    final URL = 'https://obscure-ridge-85508.herokuapp.com/api/v1/group';
     // String URL = 'http://10.0.2.2:5000/api/v1/group';
     final response = await http.get(URL, headers: {
       'Accept': 'application/json',
