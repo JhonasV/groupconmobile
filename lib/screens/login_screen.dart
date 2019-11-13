@@ -1,13 +1,11 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:groupcon01/screens/home_screen.dart';
-import 'package:groupcon01/services/AuthService.dart';
-
-import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:groupcon01/screens/home_screen.dart';
+import 'package:groupcon01/services/AuthService.dart';
 
 class LoginScreen extends StatefulWidget {
   static final String id = "login_screen";
@@ -24,11 +22,10 @@ class _LoginScreenState extends State<LoginScreen> {
   void _submitForm() async {
     if (_key.currentState.validate()) {
       setState(() => isLoading = true);
-      //TODO: AuthService.Login(_email, _password);
-      // var response = await http.post('http://10.0.2.2:5000/api/v1/auth/login',
-      //     body: {'email': _email.text, 'password': _password.text});
+      //Make http request to login
       Response response = await AuthService.login(_email.text, _password.text);
 
+      //Verify if is ok, save the token and redirect to home page
       if (response.statusCode == 200) {
         var jsonData = json.decode(response.body);
         String token = jsonData['token'];
@@ -41,6 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
               MaterialPageRoute(builder: (context) => HomeScreen()),
               (Route<dynamic> route) => false);
         }
+        //Verify input errors
       } else if (response.statusCode == 400) {
         var jsonData = json.decode(response.body);
         String error = jsonData['error'];
@@ -73,44 +71,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       children: <Widget>[
                         SafeArea(
-                          child: Container(
-                            alignment: Alignment.topLeft,
-                            height: 30.0,
-                            width: double.infinity,
-                            child: IconButton(
-                              icon: Icon(Icons.arrow_back),
-                              iconSize: 27.0,
-                              color: Colors.blue,
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          ),
+                          child: _buildAppbarNavigator(context),
                         ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            Padding(
-                              padding: EdgeInsets.only(top: 80.0),
-                              child: Text(
-                                'GroupCon',
-                                style: TextStyle(
-                                  fontSize: 35.0,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blue,
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.only(top: 80.0),
-                              child: Icon(
-                                FontAwesomeIcons.connectdevelop,
-                                size: 35.0,
-                                color: Colors.blue,
-                              ),
-                            ),
-                          ],
-                        ),
+                        _buildLoginTitle(),
                         SizedBox.shrink(),
                         SizedBox(height: 50.0),
                         _buildEmailTextField(),
@@ -120,24 +83,69 @@ class _LoginScreenState extends State<LoginScreen> {
                         _buildFormFlatButton(),
                         SizedBox(height: 20.0),
                         _loginError != ''
-                            ? Container(
-                                width: 300.0,
-                                height: 40.0,
-                                color: Colors.redAccent[50],
-                                child: Text(
-                                  _loginError,
-                                  style: TextStyle(
-                                      color: Colors.red,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 22.0),
-                                ),
-                              )
+                            ? _buildLoginErrorMessage()
                             : SizedBox.shrink()
                       ],
                     ),
                   ),
           ),
         ),
+      ),
+    );
+  }
+
+  Row _buildLoginTitle() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        Padding(
+          padding: EdgeInsets.only(top: 80.0),
+          child: Text(
+            'GroupCon',
+            style: TextStyle(
+              fontSize: 35.0,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue,
+            ),
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.only(top: 80.0),
+          child: Icon(
+            FontAwesomeIcons.connectdevelop,
+            size: 35.0,
+            color: Colors.blue,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Container _buildAppbarNavigator(BuildContext context) {
+    return Container(
+      alignment: Alignment.topLeft,
+      height: 30.0,
+      width: double.infinity,
+      child: IconButton(
+        icon: Icon(Icons.arrow_back),
+        iconSize: 27.0,
+        color: Colors.blue,
+        onPressed: () {
+          Navigator.of(context).pop();
+        },
+      ),
+    );
+  }
+
+  Container _buildLoginErrorMessage() {
+    return Container(
+      width: 300.0,
+      height: 40.0,
+      color: Colors.redAccent[50],
+      child: Text(
+        _loginError,
+        style: TextStyle(
+            color: Colors.red, fontWeight: FontWeight.bold, fontSize: 22.0),
       ),
     );
   }
