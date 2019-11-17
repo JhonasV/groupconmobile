@@ -34,11 +34,13 @@ class _LoginScreenState extends State<LoginScreen> {
       if (statusCode == 200) {
         jsonData = json.decode(body);
         String token = jsonData['token'];
+        // String currentUserId = jsonData['current']('id');
 
         SharedPreferences sharedPreferences =
             await SharedPreferences.getInstance();
         sharedPreferences.setString('token', token);
-
+        AuthService.currentUser();
+        // sharedPreferences.setString('currentUserId', currentUserId);
         Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => HomeScreen()),
             (Route<dynamic> route) => false);

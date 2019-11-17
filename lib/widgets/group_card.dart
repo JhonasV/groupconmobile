@@ -1,20 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:groupcon01/models/group.dart';
-import 'package:groupcon01/services/EmailService.dart';
-import 'package:groupcon01/widgets/email_form.dart';
+
 import 'package:url_launcher/url_launcher.dart';
 
 class GroupCard extends StatelessWidget {
-  static final Group group;
-  var emailController = TextEditingController();
-  GroupCard({Key key, this.group}) : super(key: key);
+  final Group group;
+  final dynamic showEmailDialog;
+  final String currentUserId;
+  final bool areDashboardCards;
+  final emailController = TextEditingController();
+  GroupCard(
+      {Key key,
+      this.group,
+      this.showEmailDialog,
+      this.currentUserId,
+      this.areDashboardCards})
+      : super(key: key);
   // String _email;
   @override
   Widget build(BuildContext context) {
+    bool isGroupOwner = currentUserId == group.user;
+    // final authProvider = Provider.of<AuthProvider>(context);
     return Container(
       width: double.infinity,
-      height: 130.0,
+      height: isGroupOwner && areDashboardCards ? 200.0 : 130.0,
       child: Card(
         elevation: 2.0,
         color: Color.fromRGBO(74, 170, 77, 1.0),
@@ -32,22 +42,54 @@ class GroupCard extends StatelessWidget {
               ),
             ),
             Container(
-              padding: EdgeInsets.only(left: 15.0),
-              child: Row(
-                children: <Widget>[
-                  _buildGroupCardButtonLink(
-                    FontAwesomeIcons.arrowCircleRight,
-                    "Direct Link",
-                  ),
-                  _buildGroupCardEmailButton(Icons.email, ""),
-                  _buildGroupCardButton(FontAwesomeIcons.qrcode, "QR"),
-                ],
-              ),
-            ),
+                padding: EdgeInsets.only(left: 15.0),
+                child: _buildCardActions(
+                    isGroupOwner, areDashboardCards, context)),
           ],
         ),
       ),
     );
+  }
+
+  _buildCardActions(
+      bool isGroupOwner, bool areDashboardCards, BuildContext context) {
+    if (isGroupOwner && areDashboardCards) {
+      return Column(
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              _builActionCardButton(Icons.edit, "Edit", Color(0xFFFF9F12)),
+              _builActionCardButton(Icons.delete, "Delete", Color(0xFFE73238)),
+            ],
+          ),
+          Row(
+            children: <Widget>[
+              _buildGroupCardButtonLink(
+                FontAwesomeIcons.arrowCircleRight,
+                "Direct Link",
+              ),
+              _buildGroupCardEmailButton(Icons.email, "", context, group.id),
+              _buildGroupCardButton(FontAwesomeIcons.qrcode, "QR"),
+            ],
+          ),
+        ],
+      );
+    } else {
+      return Column(
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              _buildGroupCardButtonLink(
+                FontAwesomeIcons.arrowCircleRight,
+                "Direct Link",
+              ),
+              _buildGroupCardEmailButton(Icons.email, "", context, group.id),
+              _buildGroupCardButton(FontAwesomeIcons.qrcode, "QR"),
+            ],
+          )
+        ],
+      );
+    }
   }
 
   void _launchURL() async {
@@ -58,12 +100,13 @@ class GroupCard extends StatelessWidget {
     }
   }
 
-  Card _buildGroupCardEmailButton(IconData icon, String text) {
+  Card _buildGroupCardEmailButton(
+      IconData icon, String text, BuildContext context, String groupId) {
     return Card(
       elevation: 3.0,
       color: Colors.green,
       child: FlatButton(
-        onPressed: () => EmailForm(),
+        onPressed: () => showEmailDialog(context, groupId),
         child: Row(children: [
           Icon(icon),
           SizedBox(width: 5.0),
@@ -109,120 +152,23 @@ class GroupCard extends StatelessWidget {
     );
   }
 
-  showEmailDialog(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            titlePadding: EdgeInsets.all(0),
-            contentPadding: EdgeInsets.all(0),
-            title: _buildAlertDialogTitle(),
-            content: _buildAlertDialogContent(size, context),
-          );
-        });
-  }
-
-  Container _buildAlertDialogContent(Size size, BuildContext context) {
-    return Container(
-      width: size.width * 1.0,
-      height: size.height * 0.4,
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          _buildAlertDialogForm(),
-          Spacer(),
-          _buildAlertDialogCustomFooter(context),
-        ],
-      ),
-    );
-  }
-
-  Padding _buildAlertDialogForm() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 40.0),
-      child: Form(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            TextFormField(
-              keyboardType: TextInputType.emailAddress,
-              controller: emailController,
-              decoration: InputDecoration(
-                  hintText: 'Email', prefixIcon: Icon(Icons.mail)),
-            ),
-            SizedBox(height: 10.0),
-            Container(
-              width: double.infinity,
-              height: 35.0,
-              child: FlatButton(
-                onPressed: () async {
-                  var email = emailController.text.trim();
-
-                  var response =
-                      await EmailService.sendInviteLinkEmail(group.id, email);
-                  var body = response['body'];
-                  int statusCode = response['statusCode'];
-                },
-                child: Text(
-                  'Send',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 17.0),
-                ),
-                color: Colors.blue,
-              ),
-            ),
-          ],
+  Card _builActionCardButton(IconData icon, String text, Color color) {
+    return Card(
+      elevation: 3.0,
+      color: color,
+      child: Container(
+        width: 155.0,
+        child: FlatButton(
+          onPressed: () => null,
+          child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+            Icon(icon),
+            SizedBox(width: 3.0),
+            Text(text, style: TextStyle(fontWeight: FontWeight.bold))
+          ]),
+          color: color,
+          textColor: Colors.white,
         ),
       ),
-    );
-  }
-
-  Container _buildAlertDialogCustomFooter(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: 50.0,
-      color: Colors.blue,
-      child: Row(
-        // crossAxisAlignment: CrossAxisAlignment.end,
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Container(
-            width: 120.0,
-            height: 30.0,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(30.0)),
-            ),
-            padding: EdgeInsets.only(right: 10.0),
-            child: FlatButton(
-              color: Colors.white,
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                'Close',
-                style: TextStyle(
-                  color: Colors.black54,
-                  fontSize: 16.0,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Container _buildAlertDialogTitle() {
-    return Container(
-      padding: EdgeInsets.all(15.0),
-      height: 50.0,
-      width: double.infinity,
-      color: Colors.blue,
-      child: Text('Send invite link',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
     );
   }
 }

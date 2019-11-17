@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:groupcon01/providers/auth_provider.dart';
 import 'package:groupcon01/providers/group_provider.dart';
+import 'package:groupcon01/screens/dashboard_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'package:groupcon01/screens/home_screen.dart';
@@ -14,7 +16,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      builder: (context) => GroupProvider(),
+      builder: (context) => AuthProvider(),
       child: MaterialApp(
         title: 'GroupCon',
         theme: ThemeData(
@@ -24,6 +26,7 @@ class MyApp extends StatelessWidget {
         routes: {
           HomeScreen.id: (context) => HomeScreen(),
           LoginScreen.id: (context) => LoginScreen(),
+          DashboardScreen.id: (context) => DashboardScreen(),
         },
         debugShowCheckedModeBanner: false,
       ),

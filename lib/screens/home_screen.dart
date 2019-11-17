@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:provider/provider.dart';
+import 'package:groupcon01/screens/dashboard_screen.dart';
+import 'package:groupcon01/services/EmailService.dart';
+import 'package:groupcon01/widgets/drawer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:groupcon01/models/group.dart';
-import 'package:groupcon01/providers/group_provider.dart';
-import 'package:groupcon01/screens/login_screen.dart';
 import 'package:groupcon01/services/GroupService.dart';
 import 'package:groupcon01/widgets/group_card.dart';
 
@@ -17,195 +17,119 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  Future<List<Group>> groups;
+  // Future<List<Group>> groups;
+  final _formEmailKey = GlobalKey<FormState>();
   final emailController = TextEditingController();
-
+  final searchController = TextEditingController();
   SharedPreferences sharedPreferences;
-  bool isAutenticated = false;
-  static List<Group> auxGroups;
-  _isAutenticated() async {
-    sharedPreferences = await SharedPreferences.getInstance();
-    String token = sharedPreferences.getString('token');
-    setState(() => isAutenticated = token != null);
-  }
-
+  bool _isLoading = true;
+  String _emailResponseMessage = '';
+  List<Group> auxGroups = [];
+  List<Group> groupList = [];
+  String currentUserId;
   @override
   void initState() {
+    // groups = GroupService.fetchLatestsGroups();
+    GroupService.fetchLatestsGroups().then((value) {
+      setState(() {
+        auxGroups.addAll(value);
+        groupList = auxGroups;
+        _isLoading = !_isLoading;
+      });
+    });
+    _setupCurrentId();
     super.initState();
-    groups = GroupService.fetchLatestsGroups();
-    _isAutenticated();
+  }
+
+  _setupCurrentId() async {
+    sharedPreferences = await SharedPreferences.getInstance();
+    setState(() {
+      currentUserId = sharedPreferences.getString('currentUserId');
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final groupData = Provider.of<GroupProvider>(context);
-    setState(() => auxGroups = groupData.groups);
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('GroupCon'),
-        backgroundColor: Colors.blue,
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            Container(
-              height: 100.0,
-              width: double.infinity,
-              child: DrawerHeader(
-                child: Text(
-                  'GroupCon',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 25.0),
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.blue,
-                ),
-              ),
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('GroupCon'),
+          backgroundColor: Colors.blue,
+        ),
+        drawer: DrawerWidget(),
+        body: GestureDetector(
+          onTap: () {
+            FocusScopeNode currentFocus = FocusScope.of(context);
+            if (!currentFocus.hasPrimaryFocus) {
+              currentFocus.unfocus();
+            }
+          },
+          child: Container(
+            height: double.infinity,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                // Expanded(child: _buildCardGroups()),
+
+                Expanded(child: _setupItems(currentUserId)),
+              ],
             ),
-            ListTile(
-              leading: Icon(Icons.home),
-              title: Text(
-                'Home',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
-              ),
-              trailing: Icon(Icons.chevron_right),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            isAutenticated
-                ? _showDrawerMenuAutenticatedOptions()
-                : _showDrawerMenuGuessOptions(),
-          ],
+          ),
         ),
       ),
-      body: GestureDetector(
-        onTap: () {
-          FocusScopeNode currentFocus = FocusScope.of(context);
-          if (!currentFocus.hasPrimaryFocus) {
-            currentFocus.unfocus();
+    );
+  }
+
+  void _sendEmail(String groupId, String email) {
+    if (_formEmailKey.currentState.validate()) {
+      setState(() => _isLoading = true);
+      Future<dynamic> emailServiceFuture =
+          EmailService.sendInviteLinkEmail(groupId, email);
+      FutureBuilder(
+        future: emailServiceFuture,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            if (snapshot.data['statusCode'] == 200) {
+              setState(() {
+                _isLoading = false;
+                _emailResponseMessage = "Email sended succesfully!";
+              });
+            }
           }
         },
-        child: Container(
-          height: double.infinity,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Expanded(child: _buildCardGroups()),
-            ],
-          ),
-        ),
-      ),
-    );
+      );
+    }
   }
 
-  _logout() async {
-    sharedPreferences = await SharedPreferences.getInstance();
-    sharedPreferences.remove('token');
-    Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => HomeScreen()),
-        (Route<dynamic> route) => false);
+  _setupItems(String currentUserId) {
+    var groups = Column(
+      children: groupList
+          .map((group) => GroupCard(
+                group: group,
+                showEmailDialog: showEmailDialog,
+                currentUserId: currentUserId,
+                areDashboardCards: false,
+              ))
+          .toList(),
+    );
+    var screenItems = [_buildHeaderWithTextField(), _buildItemsTitle(), groups];
+    return _buildItems(screenItems);
   }
 
-  _showDrawerMenuAutenticatedOptions() {
-    return Column(
-      children: <Widget>[
-        ListTile(
-          leading: Icon(FontAwesomeIcons.chartBar),
-          trailing: Icon(Icons.chevron_right),
-          title: Text(
-            'Dashboard',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
-          ),
-          onTap: () {},
-        ),
-        ListTile(
-          leading: Icon(FontAwesomeIcons.plusCircle),
-          trailing: Icon(Icons.chevron_right),
-          title: Text(
-            'New Group',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
-          ),
-          onTap: () {},
-        ),
-        ListTile(
-          leading: Icon(FontAwesomeIcons.signOutAlt),
-          trailing: Icon(Icons.chevron_right),
-          title: Text(
-            'Logout',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
-          ),
-          onTap: () => _logout(),
-        ),
-      ],
-    );
-  }
-
-  _showDrawerMenuGuessOptions() {
-    return Column(
-      children: <Widget>[
-        ListTile(
-          leading: Icon(FontAwesomeIcons.signInAlt),
-          trailing: Icon(Icons.chevron_right),
-          title: Text(
-            'Login',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
-          ),
-          onTap: () {
-            Navigator.pop(context);
-            Navigator.pushNamed(context, LoginScreen.id);
-          },
-        ),
-        ListTile(
-          leading: Icon(FontAwesomeIcons.userAlt),
-          trailing: Icon(Icons.chevron_right),
-          title: Text(
-            'Register',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
-          ),
-          onTap: () {},
-        ),
-      ],
-    );
-  }
-
-  FutureBuilder<List<Group>> _buildCardGroups() {
-    return FutureBuilder(
-      future: groups,
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          var groupList = snapshot.data;
-
-          var cards = Column(
-              children:
-                  groupList.map((group) => GroupCard(group: group)).toList());
-
-          var items = [_buildHeaderWithTextField(), _buildItemsTitle(), cards];
-
-          return ListView.builder(
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              return items[index];
-            },
-          );
-        } else if (snapshot.hasError) {
-          return Column(
-            children: <Widget>[Text('${snapshot.error}')],
-          );
-        }
-
-        return Container(
-          padding: EdgeInsets.only(top: 70.0),
-          child: Center(
-            child: CircularProgressIndicator(),
-          ),
-        );
-      },
-    );
+  Widget _buildItems(List<RenderObjectWidget> screenItems) {
+    if (_isLoading) {
+      return Container(
+        child: Center(child: CircularProgressIndicator()),
+      );
+    } else {
+      return ListView.builder(
+        itemCount: screenItems.length,
+        itemBuilder: (context, index) {
+          return screenItems[index];
+        },
+      );
+    }
   }
 
   Padding _buildHeaderWithTextField() {
@@ -263,7 +187,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: Colors.white,
                 width: 410.0,
                 child: TextField(
-                  onChanged: (input) {},
+                  controller: searchController,
+                  onChanged: (input) {
+                    var value = input.toLowerCase();
+                    if (value.length > 0) {
+                      print(value);
+                      setState(() {
+                        groupList = groupList
+                            .where((group) =>
+                                group.name.toLowerCase().contains(value))
+                            .toList();
+                      });
+                    } else {
+                      setState(() {
+                        groupList = auxGroups;
+                      });
+                    }
+                  },
                   decoration: InputDecoration(
                       contentPadding: const EdgeInsets.symmetric(vertical: 8.0),
                       hintText: 'Search',
@@ -277,11 +217,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       border: InputBorder.none),
                   style: TextStyle(
-                    color: Colors.blue,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 23.0,
-                    decorationColor: Colors.white,
-                  ),
+                      color: Colors.blue,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 23.0),
                 ),
               ),
             ),
@@ -295,9 +233,135 @@ class _HomeScreenState extends State<HomeScreen> {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Text(
-        'Latest groups added',
+        searchController.text.length > 0
+            ? "Search results: ${groupList.length}"
+            : 'Latest groups added',
         style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w800),
       ),
+    );
+  }
+
+  showEmailDialog(BuildContext context, String groupId) {
+    final size = MediaQuery.of(context).size;
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            titlePadding: EdgeInsets.all(0),
+            contentPadding: EdgeInsets.all(0),
+            title: _buildAlertDialogTitle(),
+            content: _buildAlertDialogContent(size, context, groupId),
+          );
+        });
+  }
+
+  Container _buildAlertDialogContent(
+      Size size, BuildContext context, String groupId) {
+    return Container(
+      width: size.width * 1.0,
+      height: size.height * 0.4,
+      child: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Column(
+              mainAxisSize: MainAxisSize.max,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                _buildAlertDialogForm(groupId),
+                Spacer(),
+                _buildAlertDialogCustomFooter(context),
+              ],
+            ),
+    );
+  }
+
+  Padding _buildAlertDialogForm(String groupId) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 40.0),
+      child: Form(
+        key: _formEmailKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            TextFormField(
+              validator: (input) =>
+                  !input.trim().contains('@') ? 'Enter a valid email' : null,
+              keyboardType: TextInputType.emailAddress,
+              controller: emailController,
+              decoration: InputDecoration(
+                  hintText: 'Email', prefixIcon: Icon(Icons.mail)),
+            ),
+            SizedBox(height: 10.0),
+            Container(
+              width: double.infinity,
+              height: 35.0,
+              child: FlatButton(
+                onPressed: () =>
+                    _sendEmail(groupId, emailController.text.trim()),
+                child: Text(
+                  'Send',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 17.0),
+                ),
+                color: Colors.blue,
+              ),
+            ),
+            SizedBox(height: 20.0),
+            _emailResponseMessage.length > 0
+                ? Text(
+                    _emailResponseMessage,
+                    style: TextStyle(fontSize: 20.0),
+                  )
+                : SizedBox.shrink(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Container _buildAlertDialogCustomFooter(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: 50.0,
+      color: Colors.blue,
+      child: Row(
+        // crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Container(
+            width: 120.0,
+            height: 30.0,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(30.0)),
+            ),
+            padding: EdgeInsets.only(right: 10.0),
+            child: FlatButton(
+              color: Colors.white,
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Close',
+                style: TextStyle(
+                  color: Colors.black54,
+                  fontSize: 16.0,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Container _buildAlertDialogTitle() {
+    return Container(
+      padding: EdgeInsets.all(15.0),
+      height: 50.0,
+      width: double.infinity,
+      color: Colors.blue,
+      child: Text('Send invite link',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
     );
   }
 }
