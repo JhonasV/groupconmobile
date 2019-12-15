@@ -4,6 +4,7 @@ import 'package:groupcon01/screens/create_screen.dart';
 import 'package:groupcon01/screens/dashboard_screen.dart';
 import 'package:groupcon01/screens/home_screen.dart';
 import 'package:groupcon01/screens/login_screen.dart';
+import 'package:groupcon01/screens/register_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DrawerWidget extends StatefulWidget {
@@ -133,7 +134,10 @@ class _DrawerWidgetState extends State<DrawerWidget> {
             'Register',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
           ),
-          onTap: () {},
+          onTap: () {
+            Navigator.pop(context);
+            Navigator.pushNamed(context, RegisterScreen.id);
+          },
         ),
       ],
     );
