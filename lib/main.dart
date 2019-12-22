@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:groupcon01/providers/auth_provider.dart';
-import 'package:groupcon01/providers/group_provider.dart';
 import 'package:groupcon01/screens/dashboard_screen.dart';
 import 'package:groupcon01/screens/register_screen.dart';
 import 'package:provider/provider.dart';

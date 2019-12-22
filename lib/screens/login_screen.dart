@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:groupcon01/screens/register_screen.dart';
 import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -66,8 +67,8 @@ class _LoginScreenState extends State<LoginScreen> {
       },
       child: Scaffold(
         body: Container(
-          height: double.infinity,
-          width: double.infinity,
+          height: MediaQuery.of(context).size.height * 1,
+          width: MediaQuery.of(context).size.width * 1,
           child: Form(
             key: _key,
             child: isLoading
@@ -76,6 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   )
                 : SingleChildScrollView(
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>[
                         SafeArea(
                           child: _buildAppbarNavigator(context),
@@ -88,16 +90,38 @@ class _LoginScreenState extends State<LoginScreen> {
                         _buildPasswordTextField(),
                         SizedBox(height: 30.0),
                         _buildFormFlatButton(),
+                        SizedBox(height: 10.0),
+                        Text(
+                          "or",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20.0,
+                              color: Colors.blue),
+                        ),
+                        SizedBox(height: 10.0),
+                        _buildSignInButton(context),
                         SizedBox(height: 20.0),
                         _loginError != ''
                             ? _buildLoginErrorMessage()
-                            : SizedBox.shrink()
+                            : SizedBox.shrink(),
                       ],
                     ),
                   ),
           ),
         ),
       ),
+    );
+  }
+
+  FlatButton _buildSignInButton(BuildContext context) {
+    return FlatButton(
+      child: Text(
+        "Sign Up",
+        style: TextStyle(
+            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18.0),
+      ),
+      color: Colors.blue,
+      onPressed: () => Navigator.of(context).pushNamed(RegisterScreen.id),
     );
   }
 
@@ -114,14 +138,6 @@ class _LoginScreenState extends State<LoginScreen> {
               fontWeight: FontWeight.bold,
               color: Colors.blue,
             ),
-          ),
-        ),
-        Padding(
-          padding: EdgeInsets.only(top: 80.0),
-          child: Icon(
-            FontAwesomeIcons.connectdevelop,
-            size: 35.0,
-            color: Colors.blue,
           ),
         ),
       ],
@@ -161,10 +177,6 @@ class _LoginScreenState extends State<LoginScreen> {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Container(
-        decoration: BoxDecoration(
-          color: Colors.blue,
-          borderRadius: BorderRadius.all(Radius.circular(30)),
-        ),
         padding: EdgeInsets.symmetric(horizontal: 20.0),
         width: double.infinity,
         height: 40.0,

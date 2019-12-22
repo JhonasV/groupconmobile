@@ -28,6 +28,7 @@ dependencies:
   font_awesome_flutter: 8.5.0
   url_launcher: 5.2.5
   provider: any
+  qr_flutter: any
 
 dev_dependencies:
   flutter_test:

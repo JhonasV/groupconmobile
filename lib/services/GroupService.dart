@@ -19,14 +19,23 @@ class GroupService {
         headers: {HttpHeaders.authorizationHeader: 'Bearer $token'});
   }
 
-  static Future<List<Group>> fetchLatestsGroups() async {
+  static Future<Map<String, List<Group>>> fetchLatestsGroups() async {
     final url = 'https://obscure-ridge-85508.herokuapp.com/api/v1/group';
     final response = await http.get(url, headers: {
       'Accept': 'application/json',
     });
+
     if (response.statusCode == 200) {
-      List<Group> groups = parseGroups(response.body);
-      return groups;
+      final bodyDecoded = json.decode(response.body);
+
+      List<Group> groups = parseGroups(bodyDecoded['groups']);
+      List<Group> latestGroups = parseGroups(bodyDecoded['latestGroups']);
+
+      Map<String, List<Group>> result = {
+        "latestGroups": latestGroups,
+        "groups": groups
+      };
+      return result;
     } else {
       throw new Exception('Error fetching the data');
     }
@@ -42,16 +51,16 @@ class GroupService {
       'Accept': 'application/json',
     });
     if (response.statusCode == 200) {
-      List<Group> groups = parseCurrentUserGroups(response.body);
+      List<Group> groups = parseGroups(json.decode(response.body));
       return groups;
     } else {
       throw new Exception('Error fetching the data');
     }
   }
 
-  static List<Group> parseGroups(String responseBody) {
-    final parsed = json.decode(responseBody);
-    return parsed['groups'].map<Group>((json) => Group.fromJson(json)).toList();
+  static List<Group> parseGroups(dynamic responseBody) {
+    // final parsed = json.decode(responseBody);
+    return responseBody.map<Group>((json) => Group.fromJson(json)).toList();
   }
 
   static List<Group> parseCurrentUserGroups(String responseBody) {

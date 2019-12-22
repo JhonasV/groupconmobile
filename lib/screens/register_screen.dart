@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:groupcon01/models/user.dart';
 import 'package:groupcon01/screens/home_screen.dart';
+import 'package:groupcon01/screens/login_screen.dart';
 import 'package:groupcon01/services/AuthService.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -51,12 +52,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       //   Navigator.of(context).pushAndRemoveUntil(
       //       MaterialPageRoute(builder: (context) => HomeScreen()),
       //       (Route<dynamic> route) => false);
-    } else {
-      // Bad Request...
+      setState(() {
+        isLoading = !isLoading;
+      });
     }
-    setState(() {
-      isLoading = !isLoading;
-    });
   }
 
   @override
@@ -91,7 +90,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: <Widget>[
-                          SizedBox(height: 70.0),
+                          SizedBox(height: 55.0),
                           Text(
                             'Register',
                             style: TextStyle(
@@ -101,32 +100,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           SizedBox(height: 10.0),
                           _buildTextFormFieldEmail(),
-                          SizedBox(height: 10.0),
+                          SizedBox(height: 15.0),
                           _buildTextFormFieldNickName(),
-                          SizedBox(height: 10.0),
+                          SizedBox(height: 15.0),
                           _buildTextFormFieldPassword(),
-                          SizedBox(height: 10.0),
+                          SizedBox(height: 15.0),
                           _buildTextFormFieldPasswordConf(),
+                          SizedBox(height: 15.0),
+                          _buildSubmitButton(),
+                          Text(
+                            "or",
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20.0,
+                                color: Colors.blue),
+                          ),
                           SizedBox(height: 10.0),
-                          Container(
-                            width: double.infinity,
-                            child: FlatButton(
-                              color: Colors.blue,
-                              child: Text(
-                                'Submit',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 19.0),
-                              ),
-                              onPressed: () => _onSubmit(),
-                            ),
-                          )
+                          _buildSignInButton(context)
                         ],
                       ),
                     ),
                   ),
                 )),
+    );
+  }
+
+  Container _buildSubmitButton() {
+    return Container(
+      width: double.infinity,
+      child: FlatButton(
+        color: Colors.blue,
+        child: Text(
+          'Submit',
+          style: TextStyle(
+              color: Colors.white, fontWeight: FontWeight.w800, fontSize: 19.0),
+        ),
+        onPressed: () => _onSubmit(),
+      ),
     );
   }
 
@@ -136,6 +146,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           hintText: 'Email',
           prefixIcon: Icon(Icons.email),
         ),
+        style: TextStyle(fontSize: 18.0),
         onSaved: (value) => _email = value,
         validator: (val) => !val.contains('@') ? 'Enter a valid email' : null);
   }
@@ -146,6 +157,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         hintText: 'NickName',
         prefixIcon: Icon(FontAwesomeIcons.userAlt),
       ),
+      style: TextStyle(fontSize: 18.0),
       onSaved: (value) => _nickName = value,
       validator: (val) => val.length < 5 ? 'Enter atleast 5 characters' : null,
     );
@@ -157,6 +169,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         hintText: 'Password',
         prefixIcon: Icon(FontAwesomeIcons.lock),
       ),
+      style: TextStyle(fontSize: 18.0),
       obscureText: true,
       onSaved: (value) => _password = value,
       validator: (val) => val.length < 5 ? 'Enter atleast 5 characters' : null,
@@ -169,9 +182,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
         hintText: 'Password confirmation',
         prefixIcon: Icon(FontAwesomeIcons.lock),
       ),
+      style: TextStyle(fontSize: 18.0),
       obscureText: true,
       onSaved: (value) => _confirmPassword = value,
       validator: (val) => val.length < 5 ? 'Enter atleast 5 characters' : null,
+    );
+  }
+
+  FlatButton _buildSignInButton(BuildContext context) {
+    return FlatButton(
+      child: Text(
+        "Log In",
+        style: TextStyle(
+            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18.0),
+      ),
+      color: Colors.blue,
+      onPressed: () {
+        Navigator.of(context).pushNamed(LoginScreen.id);
+      },
     );
   }
 }

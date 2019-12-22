@@ -3,15 +3,18 @@ class Group {
   String id;
   String url;
   dynamic user;
+  bool private;
 
-  Group({this.id, this.name, this.url, this.user});
+  Group({this.id, this.name, this.url, this.user, this.private});
 
   factory Group.fromJson(Map<String, dynamic> json) {
     return Group(
-        id: json['_id'],
-        name: json['name'],
-        url: json['url'],
-        user: json['user']);
+      id: json['_id'],
+      name: json['name'],
+      url: json['url'],
+      user: json['user'],
+      private: json['private'],
+    );
   }
 
   // static final List<Group> groups = [

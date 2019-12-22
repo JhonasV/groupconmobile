@@ -20,7 +20,6 @@ class _CreateScreenState extends State<CreateScreen> {
       await GroupService.create(Group(name: _name, url: _url));
       Navigator.of(context).pushNamedAndRemoveUntil(
           DashboardScreen.id, (Route<dynamic> route) => false);
-      // Service here
     }
   }
 

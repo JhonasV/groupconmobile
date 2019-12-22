@@ -18,30 +18,35 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   // Future<List<Group>> groups;
-  final _formEmailKey = GlobalKey<FormState>();
-  final emailController = TextEditingController();
+
   final searchController = TextEditingController();
   SharedPreferences sharedPreferences;
   bool _isLoading = true;
-  String _emailResponseMessage = '';
-  List<Group> auxGroups = [];
-  List<Group> groupList = [];
+
+  List<Group> auxLatestGroups = [];
+
+  List<Group> groups = [];
+  List<Group> latestGroups = [];
+
   String currentUserId;
   @override
   void initState() {
-    // groups = GroupService.fetchLatestsGroups();
-    GroupService.fetchLatestsGroups().then((value) {
-      setState(() {
-        auxGroups.addAll(value);
-        groupList = auxGroups;
-        _isLoading = !_isLoading;
-      });
-    });
-    _setupCurrentId();
     super.initState();
+    _setupFetchLatestsGroups();
+    _setupCurrentUserId();
   }
 
-  _setupCurrentId() async {
+  _setupFetchLatestsGroups() async {
+    var groupMap = await GroupService.fetchLatestsGroups();
+    setState(() {
+      groups = groupMap['groups'];
+      latestGroups = groupMap['latestGroups'];
+      auxLatestGroups = latestGroups;
+      _isLoading = !_isLoading;
+    });
+  }
+
+  _setupCurrentUserId() async {
     sharedPreferences = await SharedPreferences.getInstance();
     setState(() {
       currentUserId = sharedPreferences.getString('currentUserId');
@@ -81,39 +86,18 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _sendEmail(String groupId, String email) {
-    if (_formEmailKey.currentState.validate()) {
-      setState(() => _isLoading = true);
-      Future<dynamic> emailServiceFuture =
-          EmailService.sendInviteLinkEmail(groupId, email);
-      FutureBuilder(
-        future: emailServiceFuture,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            if (snapshot.data['statusCode'] == 200) {
-              setState(() {
-                _isLoading = false;
-                _emailResponseMessage = "Email sended succesfully!";
-              });
-            }
-          }
-        },
-      );
-    }
-  }
-
   _setupItems(String currentUserId) {
-    var groups = Column(
-      children: groupList
+    var latest = Column(
+      children: latestGroups
           .map((group) => GroupCard(
                 group: group,
-                showEmailDialog: showEmailDialog,
+                // showEmailDialog: showEmailDialog,
                 currentUserId: currentUserId,
                 areDashboardCards: false,
               ))
           .toList(),
     );
-    var screenItems = [_buildHeaderWithTextField(), _buildItemsTitle(), groups];
+    var screenItems = [_buildHeaderWithTextField(), _buildItemsTitle(), latest];
     return _buildItems(screenItems);
   }
 
@@ -193,14 +177,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     if (value.length > 0) {
                       print(value);
                       setState(() {
-                        groupList = groupList
+                        latestGroups = groups
                             .where((group) =>
                                 group.name.toLowerCase().contains(value))
                             .toList();
                       });
                     } else {
                       setState(() {
-                        groupList = auxGroups;
+                        latestGroups = auxLatestGroups;
                       });
                     }
                   },
@@ -234,134 +218,10 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.all(8.0),
       child: Text(
         searchController.text.length > 0
-            ? "Search results: ${groupList.length}"
+            ? "Search results: ${latestGroups.length}"
             : 'Latest groups added',
         style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w800),
       ),
-    );
-  }
-
-  showEmailDialog(BuildContext context, String groupId) {
-    final size = MediaQuery.of(context).size;
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            titlePadding: EdgeInsets.all(0),
-            contentPadding: EdgeInsets.all(0),
-            title: _buildAlertDialogTitle(),
-            content: _buildAlertDialogContent(size, context, groupId),
-          );
-        });
-  }
-
-  Container _buildAlertDialogContent(
-      Size size, BuildContext context, String groupId) {
-    return Container(
-      width: size.width * 1.0,
-      height: size.height * 0.4,
-      child: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : Column(
-              mainAxisSize: MainAxisSize.max,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                _buildAlertDialogForm(groupId),
-                Spacer(),
-                _buildAlertDialogCustomFooter(context),
-              ],
-            ),
-    );
-  }
-
-  Padding _buildAlertDialogForm(String groupId) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 40.0),
-      child: Form(
-        key: _formEmailKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            TextFormField(
-              validator: (input) =>
-                  !input.trim().contains('@') ? 'Enter a valid email' : null,
-              keyboardType: TextInputType.emailAddress,
-              controller: emailController,
-              decoration: InputDecoration(
-                  hintText: 'Email', prefixIcon: Icon(Icons.mail)),
-            ),
-            SizedBox(height: 10.0),
-            Container(
-              width: double.infinity,
-              height: 35.0,
-              child: FlatButton(
-                onPressed: () =>
-                    _sendEmail(groupId, emailController.text.trim()),
-                child: Text(
-                  'Send',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 17.0),
-                ),
-                color: Colors.blue,
-              ),
-            ),
-            SizedBox(height: 20.0),
-            _emailResponseMessage.length > 0
-                ? Text(
-                    _emailResponseMessage,
-                    style: TextStyle(fontSize: 20.0),
-                  )
-                : SizedBox.shrink(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Container _buildAlertDialogCustomFooter(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: 50.0,
-      color: Colors.blue,
-      child: Row(
-        // crossAxisAlignment: CrossAxisAlignment.end,
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Container(
-            width: 120.0,
-            height: 30.0,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(30.0)),
-            ),
-            padding: EdgeInsets.only(right: 10.0),
-            child: FlatButton(
-              color: Colors.white,
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                'Close',
-                style: TextStyle(
-                  color: Colors.black54,
-                  fontSize: 16.0,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Container _buildAlertDialogTitle() {
-    return Container(
-      padding: EdgeInsets.all(15.0),
-      height: 50.0,
-      width: double.infinity,
-      color: Colors.blue,
-      child: Text('Send invite link',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
     );
   }
 }
