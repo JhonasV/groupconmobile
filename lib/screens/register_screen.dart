@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:groupcon01/models/user.dart';
@@ -19,42 +17,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
   var _formKey = GlobalKey<FormState>();
   String _email, _password, _confirmPassword, _nickName;
   bool isLoading = false;
-
+  String _loginError = "";
   _onSubmit() async {
     if (_formKey.currentState.validate()) {
-      // setState(() {
-      //   _isLoading = !_isLoading;
-      // });
-      // _formKey.currentState.save();
-      // print(_email);
-      // print(_password);
-      // print(_confirmPassword);
-      // print(_nickName);
-
-      // //TODO: Save data
-      // //Call service here...
-      // User newUser = User(email: _email, nickname: _nickName);
-      // Map<String, dynamic> response =
-      //     await AuthService.register(newUser, _password);
-      // dynamic jsonData;
-      // var body = response['body'];
-      // jsonData = json.decode(body);
-      // if (response['statusCode'] == 200) {
-      //   // OK...
-      //   sharedPreferences = await SharedPreferences.getInstance();
-
-      //   String token = jsonData['token'];
-      //   String currentUserId = jsonData['userId'];
-
-      //   sharedPreferences.setString('token', token);
-      //   sharedPreferences.setString('currentUserId', currentUserId);
-      //   // AuthService.currentUser();
-      //   Navigator.of(context).pushAndRemoveUntil(
-      //       MaterialPageRoute(builder: (context) => HomeScreen()),
-      //       (Route<dynamic> route) => false);
       setState(() {
         isLoading = !isLoading;
       });
+      _formKey.currentState.save();
+
+      User newUser = User(email: _email, nickname: _nickName);
+      Map<String, dynamic> response =
+          await AuthService.register(newUser, _password);
+
+      // OK...
+      if (response['error'] != null) {
+        setState(() {
+          _loginError = response['error'];
+          isLoading = !isLoading;
+        });
+      } else {
+        sharedPreferences = await SharedPreferences.getInstance();
+        sharedPreferences.setString('token', response['token']);
+        sharedPreferences.setString('currentUserId', response['userId']);
+        Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => HomeScreen()),
+            (Route<dynamic> route) => false);
+      }
+
+      // AuthService.currentUser();
+
     }
   }
 
@@ -99,6 +90,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 color: Colors.blue),
                           ),
                           SizedBox(height: 10.0),
+                          _loginError != ''
+                              ? _buildLoginErrorMessage()
+                              : SizedBox.shrink(),
+                          SizedBox(height: 10.0),
                           _buildTextFormFieldEmail(),
                           SizedBox(height: 15.0),
                           _buildTextFormFieldNickName(),
@@ -116,7 +111,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 color: Colors.blue),
                           ),
                           SizedBox(height: 10.0),
-                          _buildSignInButton(context)
+                          _buildSignInButton(context),
                         ],
                       ),
                     ),
@@ -136,6 +131,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
               color: Colors.white, fontWeight: FontWeight.w800, fontSize: 19.0),
         ),
         onPressed: () => _onSubmit(),
+      ),
+    );
+  }
+
+  Container _buildLoginErrorMessage() {
+    return Container(
+      width: 300.0,
+      height: 40.0,
+      color: Colors.redAccent[50],
+      child: Text(
+        _loginError,
+        style: TextStyle(
+          color: Colors.red,
+          fontWeight: FontWeight.bold,
+          fontSize: 22.0,
+        ),
+        textAlign: TextAlign.center,
       ),
     );
   }

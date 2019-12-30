@@ -65,43 +65,45 @@ class _CreateScreenState extends State<CreateScreen> {
   }
 
   _buildFormElements() {
-    return Column(
-      children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: TextFormField(
-            onSaved: (input) => _name = input.trim(),
-            decoration: InputDecoration(hintText: 'Name'),
-            validator: (input) =>
-                input.length < 5 ? 'Enter a min of 5 characters' : null,
-          ),
-        ),
-        SizedBox(height: 10.0),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: TextFormField(
-            onSaved: (input) => _url = input.trim(),
-            decoration: InputDecoration(hintText: 'URL'),
-            validator: (input) =>
-                input.length < 10 ? 'Enter a valid URL' : null,
-          ),
-        ),
-        SizedBox(height: 15.0),
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 8.0),
-          height: 35.0,
-          width: double.infinity,
-          child: FlatButton(
-            child: Text(
-              'SUBMIT',
-              style:
-                  TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+    return Expanded(
+      child: Column(
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextFormField(
+              onSaved: (input) => _name = input.trim(),
+              decoration: InputDecoration(hintText: 'Name'),
+              validator: (input) =>
+                  input.length < 5 ? 'Enter a min of 5 characters' : null,
             ),
-            onPressed: () => _isLoading ? null : _submit(),
-            color: Colors.blue,
           ),
-        )
-      ],
+          SizedBox(height: 10.0),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextFormField(
+              onSaved: (input) => _url = input.trim(),
+              decoration: InputDecoration(hintText: 'URL'),
+              validator: (input) =>
+                  input.length < 10 ? 'Enter a valid URL' : null,
+            ),
+          ),
+          SizedBox(height: 15.0),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 8.0),
+            height: 35.0,
+            width: double.infinity,
+            child: FlatButton(
+              child: Text(
+                'SUBMIT',
+                style:
+                    TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              ),
+              onPressed: () => _isLoading ? null : _submit(),
+              color: Colors.blue,
+            ),
+          )
+        ],
+      ),
     );
   }
 }

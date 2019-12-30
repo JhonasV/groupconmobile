@@ -4,12 +4,13 @@ import 'dart:io';
 import 'package:groupcon01/models/group.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../config/api_config.dart';
 
 class GroupService {
   static SharedPreferences sharedPreferences;
 
   static Future<void> create(Group group) async {
-    final url = 'https://obscure-ridge-85508.herokuapp.com/api/v1/group';
+    final url = '$API_URI/api/v1/group';
 
     sharedPreferences = await SharedPreferences.getInstance();
     String token = sharedPreferences.getString('token');
@@ -20,7 +21,7 @@ class GroupService {
   }
 
   static Future<Map<String, List<Group>>> fetchLatestsGroups() async {
-    final url = 'https://obscure-ridge-85508.herokuapp.com/api/v1/group';
+    final url = '$API_URI/api/v1/group';
     final response = await http.get(url, headers: {
       'Accept': 'application/json',
     });
@@ -45,8 +46,7 @@ class GroupService {
     sharedPreferences = await SharedPreferences.getInstance();
     String currentUserId = sharedPreferences.getString('currentUserId');
 
-    final url =
-        'https://obscure-ridge-85508.herokuapp.com/api/v1/${currentUserId}/groups';
+    final url = '$API_URI/api/v1/$currentUserId/groups';
     final response = await http.get(url, headers: {
       'Accept': 'application/json',
     });

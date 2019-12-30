@@ -6,36 +6,52 @@ import 'package:qr_flutter/qr_flutter.dart';
 
 import 'package:url_launcher/url_launcher.dart';
 
-class GroupCard extends StatelessWidget {
+class GroupCard extends StatefulWidget {
   final Group group;
   // final dynamic showEmailDialog;
   // final BuildContext context;
   final String currentUserId;
   final bool areDashboardCards;
-  final emailController = TextEditingController();
-  final _formEmailKey = GlobalKey<FormState>();
-  final _emailResponseMessage = '';
-  // var emailController = TextEditingController();
+
   GroupCard({Key key, this.group, this.currentUserId, this.areDashboardCards})
       : super(key: key);
+
+  @override
+  _GroupCardState createState() => _GroupCardState();
+}
+
+class _GroupCardState extends State<GroupCard> {
+  final emailController = TextEditingController();
+
+  final _formEmailKey = GlobalKey<FormState>();
+
+  String _emailResponseMessage = '';
+
+  bool _emailLoaderIndicator = false;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
-    bool isGroupOwner = currentUserId == group.user;
+    bool isGroupOwner = widget.currentUserId == widget.group.user;
     return Container(
       width: double.infinity,
-      height: isGroupOwner && areDashboardCards ? 200.0 : 140.0,
+      height: isGroupOwner && widget.areDashboardCards ? 200.0 : 140.0,
       child: Card(
         elevation: 2.0,
-        color: _getCardBodyColor(group.url),
+        color: _getCardBodyColor(widget.group.url),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Container(
-              color: _getCardHeaderColor(group.url),
+              color: _getCardHeaderColor(widget.group.url),
               child: ListTile(
-                leading: _getGroupIcon(group.url),
+                leading: _getGroupIcon(widget.group.url),
                 title: Text(
-                  group.name,
+                  widget.group.name,
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.normal,
@@ -45,12 +61,13 @@ class GroupCard extends StatelessWidget {
               ),
             ),
             Container(
-              padding: group.private
+              padding: widget.group.private
                   ? EdgeInsets.only(top: 10.0)
                   : EdgeInsets.only(left: 15.0),
-              child: group.private
+              child: widget.group.private
                   ? _buildUnlockedButton(context)
-                  : _buildCardActions(isGroupOwner, areDashboardCards, context),
+                  : _buildCardActions(
+                      isGroupOwner, widget.areDashboardCards, context),
             ),
           ],
         ),
@@ -131,7 +148,8 @@ class GroupCard extends StatelessWidget {
             _buildGroupCardButtonLink(
                 FontAwesomeIcons.arrowCircleRight, "Direct Link", context),
             SizedBox(width: 13.0),
-            _buildGroupCardEmailButton(Icons.email, "", context, group.id),
+            _buildGroupCardEmailButton(
+                Icons.email, "", context, widget.group.id),
             SizedBox(width: 13.0),
             _buildGroupCardButton(FontAwesomeIcons.qrcode, "QR", context),
           ],
@@ -143,6 +161,7 @@ class GroupCard extends StatelessWidget {
   showEmailDialog(BuildContext context, String groupId) {
     final size = MediaQuery.of(context).size;
     return showDialog(
+        barrierDismissible: !_emailLoaderIndicator,
         context: context,
         builder: (context) {
           return AlertDialog(
@@ -165,7 +184,7 @@ class GroupCard extends StatelessWidget {
               width: MediaQuery.of(context).size.width * .8,
               child: RaisedButton(
                 onPressed: () {},
-                color: _getCardBodyColor(group.url),
+                color: _getCardBodyColor(widget.group.url),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
@@ -194,10 +213,10 @@ class GroupCard extends StatelessWidget {
   }
 
   void _launchURL() async {
-    if (await canLaunch(group.url)) {
-      await launch(group.url);
+    if (await canLaunch(widget.group.url)) {
+      await launch(widget.group.url);
     } else {
-      throw "Could not lunch ${group.url}";
+      throw "Could not lunch ${widget.group.url}";
     }
   }
 
@@ -215,7 +234,7 @@ class GroupCard extends StatelessWidget {
           SizedBox(width: 5.0),
           Text(text, style: TextStyle(fontWeight: FontWeight.bold))
         ]),
-        color: _getCardBodyColor(group.url),
+        color: _getCardBodyColor(widget.group.url),
         textColor: Colors.white,
       ),
     );
@@ -238,7 +257,7 @@ class GroupCard extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.bold),
           )
         ]),
-        color: _getCardBodyColor(group.url),
+        color: _getCardBodyColor(widget.group.url),
         textColor: Colors.white,
       ),
     );
@@ -258,7 +277,7 @@ class GroupCard extends StatelessWidget {
           SizedBox(width: 5.0),
           Text(text, style: TextStyle(fontWeight: FontWeight.bold))
         ]),
-        color: _getCardBodyColor(group.url),
+        color: _getCardBodyColor(widget.group.url),
         textColor: Colors.white,
       ),
     );
@@ -298,8 +317,13 @@ class GroupCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.max,
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          _buildAlertDialogForm(groupId),
+        children: [
+          _emailLoaderIndicator
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 85.0),
+                  child: CircularProgressIndicator(),
+                )
+              : _buildAlertDialogForm(groupId),
           Spacer(),
           _buildAlertDialogCustomFooter(context),
         ],
@@ -328,8 +352,10 @@ class GroupCard extends StatelessWidget {
               width: double.infinity,
               height: 35.0,
               child: FlatButton(
-                onPressed: () =>
-                    _sendEmail(groupId, emailController.text.trim()),
+                onPressed: () {
+                  setState(() => _emailLoaderIndicator = true);
+                  _sendEmail(groupId, emailController.text.trim());
+                },
                 child: Text(
                   'Send',
                   style: TextStyle(
@@ -359,7 +385,6 @@ class GroupCard extends StatelessWidget {
       height: 50.0,
       color: Colors.blue,
       child: Row(
-        // crossAxisAlignment: CrossAxisAlignment.end,
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           Container(
@@ -371,7 +396,8 @@ class GroupCard extends StatelessWidget {
             padding: EdgeInsets.only(right: 10.0),
             child: FlatButton(
               color: Colors.white,
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () =>
+                  _emailLoaderIndicator ? null : Navigator.of(context).pop(),
               child: Text(
                 'Close',
                 style: TextStyle(
@@ -397,24 +423,16 @@ class GroupCard extends StatelessWidget {
     );
   }
 
-  void _sendEmail(String groupId, String email) {
+  void _sendEmail(String groupId, String email) async {
     if (_formEmailKey.currentState.validate()) {
-      // setState(() => _isLoading = true);
-      Future<dynamic> emailServiceFuture =
-          EmailService.sendInviteLinkEmail(groupId, email);
-      FutureBuilder(
-        future: emailServiceFuture,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            if (snapshot.data['statusCode'] == 200) {
-              // setState(() {
-              //   _isLoading = false;
-              //   _emailResponseMessage = "Email sended succesfully!";
-              // });
-            }
-          }
-        },
-      );
+      var emailServiceFuture =
+          await EmailService.sendInviteLinkEmail(groupId, email);
+      if (emailServiceFuture['statusCode'] == 200) {
+        setState(() {
+          _emailLoaderIndicator = !_emailLoaderIndicator;
+          _emailResponseMessage = emailServiceFuture['body'];
+        });
+      }
     }
   }
 
@@ -442,7 +460,7 @@ class GroupCard extends StatelessWidget {
               height: 55.0,
               color: Colors.blue,
               child: Text(
-                "${group.name} group QR",
+                "${widget.group.name} group QR",
                 style:
                     TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
               ),
@@ -454,7 +472,7 @@ class GroupCard extends StatelessWidget {
               width: 200.0,
               child: Center(
                 child: QrImage(
-                  data: group.url,
+                  data: widget.group.url,
                   version: QrVersions.auto,
                   size: 400.0,
                 ),

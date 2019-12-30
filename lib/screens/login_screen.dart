@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:groupcon01/screens/register_screen.dart';
-import 'package:http/http.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:groupcon01/screens/home_screen.dart';
@@ -83,7 +82,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: _buildAppbarNavigator(context),
                         ),
                         _buildLoginTitle(),
-                        SizedBox.shrink(),
+                        SizedBox(height: 10.0),
+                        _loginError != ''
+                            ? _buildLoginErrorMessage()
+                            : SizedBox.shrink(),
                         SizedBox(height: 50.0),
                         _buildEmailTextField(),
                         SizedBox(height: 30.0),
@@ -101,9 +103,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         SizedBox(height: 10.0),
                         _buildSignInButton(context),
                         SizedBox(height: 20.0),
-                        _loginError != ''
-                            ? _buildLoginErrorMessage()
-                            : SizedBox.shrink(),
                       ],
                     ),
                   ),
