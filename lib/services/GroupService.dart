@@ -58,6 +58,48 @@ class GroupService {
     }
   }
 
+  static Future<Map<String, dynamic>> deleteGroup(String groupId) async {
+    final url = '$API_URI/api/v1/group/$groupId';
+
+    sharedPreferences = await SharedPreferences.getInstance();
+    final token = sharedPreferences.getString('token');
+
+    http.Response response = await http.delete(url,
+        headers: {HttpHeaders.authorizationHeader: 'Bearer $token'});
+
+    var responseDeserialized = json.decode(response.body);
+
+    Map<String, dynamic> result = {
+      'removed': responseDeserialized['removed'],
+    };
+
+    return result;
+  }
+
+  static Future<Map<String, dynamic>> updateGroup(
+      Group group, String password) async {
+    final url = '$API_URI/api/v1/${group.id}/group';
+
+    sharedPreferences = await SharedPreferences.getInstance();
+    final token = sharedPreferences.getString('token');
+
+    http.Response response = await http.put(url,
+        body: {'name': group.name, 'url': group.url, 'password': password},
+        headers: {HttpHeaders.authorizationHeader: 'Bearer $token'});
+
+    final responseDeserialized = json.decode(response.body);
+    Map<String, dynamic> result = {
+      'updated': false,
+      'error': responseDeserialized['error']
+    };
+
+    if (response.statusCode == 200) {
+      result['updated'] = true;
+    }
+
+    return result;
+  }
+
   static List<Group> parseGroups(dynamic responseBody) {
     // final parsed = json.decode(responseBody);
     return responseBody.map<Group>((json) => Group.fromJson(json)).toList();

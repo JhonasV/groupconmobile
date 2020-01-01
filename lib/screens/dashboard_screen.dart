@@ -53,8 +53,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             IconButton(
               icon: Icon(Icons.add),
               onPressed: () {
-                Navigator.of(context)
-                    .push(MaterialPageRoute(builder: (_) => CreateScreen()));
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => CreateScreen(
+                      group: null,
+                    ),
+                  ),
+                );
               },
               iconSize: 25.0,
             )

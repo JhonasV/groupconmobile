@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:groupcon01/models/group.dart';
+import 'package:groupcon01/screens/create_screen.dart';
+import 'package:groupcon01/screens/dashboard_screen.dart';
 import 'package:groupcon01/services/EmailService.dart';
+import 'package:groupcon01/services/GroupService.dart';
+import 'package:groupcon01/widgets/dialogs.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import 'package:url_launcher/url_launcher.dart';
+
+enum ButtonAction { update, delete }
 
 class GroupCard extends StatefulWidget {
   final Group group;
@@ -124,17 +130,11 @@ class _GroupCardState extends State<GroupCard> {
             padding: const EdgeInsets.only(top: 10.0),
             child: Row(
               children: <Widget>[
-                _builActionCardButton(
-                  Icons.edit,
-                  "Edit",
-                  Color(0xFFFF9F12),
-                ),
+                _builActionCardButton(Icons.edit, "Edit", Color(0xFFFF9F12),
+                    context, ButtonAction.update),
                 SizedBox(width: 10.0),
-                _builActionCardButton(
-                  Icons.delete,
-                  "Delete",
-                  Color(0xFFE73238),
-                ),
+                _builActionCardButton(Icons.delete, "Delete", Color(0xFFE73238),
+                    context, ButtonAction.delete),
               ],
             ),
           )
@@ -283,13 +283,37 @@ class _GroupCardState extends State<GroupCard> {
     );
   }
 
-  Container _builActionCardButton(IconData icon, String text, Color color) {
+  Container _builActionCardButton(IconData icon, String text, Color color,
+      BuildContext context, ButtonAction buttonAction) {
     return Container(
       height: 50.0,
       width: 155.0,
       child: RaisedButton(
         elevation: 3.0,
-        onPressed: () => null,
+        onPressed: () async {
+          if (buttonAction == ButtonAction.update) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => CreateScreen(
+                  group: widget.group,
+                ),
+              ),
+            );
+          }
+
+          if (buttonAction == ButtonAction.delete) {
+            final action = await Dialogs.confirmDialog(
+                context, "Warning", "Are you sure to delete this group?");
+            if (action == DialogAction.yes) {
+              var response = await GroupService.deleteGroup(widget.group.id);
+              if (response['removed'] == true) {
+                Navigator.pushReplacement(context,
+                    MaterialPageRoute(builder: (_) => DashboardScreen()));
+              }
+            }
+          }
+        },
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,

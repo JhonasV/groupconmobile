@@ -4,6 +4,7 @@ class Group {
   String url;
   dynamic user;
   bool private;
+  String password;
 
   Group({this.id, this.name, this.url, this.user, this.private});
 

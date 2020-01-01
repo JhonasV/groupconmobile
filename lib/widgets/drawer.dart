@@ -95,8 +95,13 @@ class _DrawerWidgetState extends State<DrawerWidget> {
           ),
           onTap: () {
             Navigator.of(context).pop();
-            Navigator.of(context)
-                .push(MaterialPageRoute(builder: (_) => CreateScreen()));
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => CreateScreen(
+                  group: null,
+                ),
+              ),
+            );
           },
         ),
         ListTile(
