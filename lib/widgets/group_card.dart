@@ -242,10 +242,11 @@ class _GroupCardState extends State<GroupCard> {
 
   Container _buildGroupCardButton(
       IconData icon, String text, BuildContext context) {
+    var size = MediaQuery.of(context).size;
     return Container(
       height: 50.0,
       margin: EdgeInsets.only(top: 10.0),
-      width: MediaQuery.of(context).size.width * .23,
+      width: size.width * .24,
       child: RaisedButton(
         elevation: 3.0,
         onPressed: () => showQRDialog(context),
@@ -285,9 +286,10 @@ class _GroupCardState extends State<GroupCard> {
 
   Container _builActionCardButton(IconData icon, String text, Color color,
       BuildContext context, ButtonAction buttonAction) {
+    var size = MediaQuery.of(context).size;
     return Container(
-      height: 50.0,
-      width: 155.0,
+      height: (size.height * .08),
+      width: (size.width * .44),
       child: RaisedButton(
         elevation: 3.0,
         onPressed: () async {

@@ -17,18 +17,15 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Future<List<Group>> groups;
-
   final searchController = TextEditingController();
   SharedPreferences sharedPreferences;
   bool _isLoading = true;
-
+  String error;
   List<Group> auxLatestGroups = [];
-
   List<Group> groups = [];
   List<Group> latestGroups = [];
-
   String currentUserId;
+
   @override
   void initState() {
     super.initState();
@@ -42,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
       groups = groupMap['groups'];
       latestGroups = groupMap['latestGroups'];
       auxLatestGroups = latestGroups;
+      error = groupMap['error'];
       _isLoading = !_isLoading;
     });
   }
@@ -75,8 +73,6 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                // Expanded(child: _buildCardGroups()),
-
                 Expanded(child: _setupItems(currentUserId)),
               ],
             ),
@@ -87,33 +83,59 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   _setupItems(String currentUserId) {
-    var latest = Column(
-      children: latestGroups
-          .map((group) => GroupCard(
-                group: group,
-                // showEmailDialog: showEmailDialog,
-                currentUserId: currentUserId,
-                areDashboardCards: false,
-              ))
-          .toList(),
-    );
+    var latest = _buildList();
     var screenItems = [_buildHeaderWithTextField(), _buildItemsTitle(), latest];
     return _buildItems(screenItems);
   }
 
-  Widget _buildItems(List<RenderObjectWidget> screenItems) {
+  Widget _buildList() {
+    Size size = MediaQuery.of(context).size;
+
     if (_isLoading) {
       return Container(
-        child: Center(child: CircularProgressIndicator()),
+        margin: EdgeInsets.symmetric(vertical: size.height * .17),
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
       );
+    } else if (!_isLoading && error != null) {
+      return showError(error);
     } else {
-      return ListView.builder(
-        itemCount: screenItems.length,
-        itemBuilder: (context, index) {
-          return screenItems[index];
-        },
+      return Column(
+        children: latestGroups
+            .map((group) => GroupCard(
+                  group: group,
+                  currentUserId: currentUserId,
+                  areDashboardCards: false,
+                ))
+            .toList(),
       );
     }
+  }
+
+  Widget showError(String error) {
+    Size size = MediaQuery.of(context).size;
+    return Container(
+      height: size.height * .4,
+      child: Center(
+        child: Text(
+          error,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20.0,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildItems(List<Widget> screenItems) {
+    return ListView.builder(
+      itemCount: screenItems.length,
+      itemBuilder: (context, index) {
+        return screenItems[index];
+      },
+    );
   }
 
   Padding _buildHeaderWithTextField() {
@@ -173,6 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: TextField(
                   controller: searchController,
                   onChanged: (input) {
+                    if (_isLoading) return;
                     var value = input.toLowerCase();
                     if (value.length > 0) {
                       print(value);

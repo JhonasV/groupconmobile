@@ -19,6 +19,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool noGroupsAdded = false;
   SharedPreferences sharedPreferences;
   String currentUserId;
+  String error;
   @override
   void initState() {
     _setupFetchUserGroups();
@@ -27,10 +28,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   _setupFetchUserGroups() async {
-    List<Group> groups = await GroupService.userGroups();
+    Map<String, dynamic> groupMap = await GroupService.userGroups();
     setState(() {
-      userGroups = groups;
+      userGroups = groupMap['groups'];
       noGroupsAdded = userGroups.length > 0;
+      error = groupMap['error'];
       _isLoading = !_isLoading;
     });
   }
@@ -81,6 +83,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   _builGroupCards() {
+    Size size = MediaQuery.of(context).size;
+
     List<dynamic> items = [_buildHeader()];
     if (userGroups.length > 0) {
       var groupCards = Column(
@@ -93,6 +97,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
             .toList(),
       );
       items.add(groupCards);
+    } else if (error != null) {
+      var errorWidget = Container(
+        margin: EdgeInsets.symmetric(vertical: size.height * .3),
+        child: Center(
+          child: Text(
+            error,
+            style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+          ),
+        ),
+      );
+      items.add(errorWidget);
     } else {
       var noGroupsAdded = Card(
         child: Container(
