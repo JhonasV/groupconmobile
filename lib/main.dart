@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:groupcon01/providers/auth_provider.dart';
 import 'package:groupcon01/screens/dashboard_screen.dart';
 import 'package:groupcon01/screens/register_screen.dart';
+import 'package:groupcon01/screens/send_email_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'package:groupcon01/screens/home_screen.dart';
@@ -25,7 +26,8 @@ class MyApp extends StatelessWidget {
           HomeScreen.id: (context) => HomeScreen(),
           LoginScreen.id: (context) => LoginScreen(),
           DashboardScreen.id: (context) => DashboardScreen(),
-          RegisterScreen.id: (context) => RegisterScreen()
+          RegisterScreen.id: (context) => RegisterScreen(),
+          SendEmailScreen.id: (context) => SendEmailScreen()
         },
         debugShowCheckedModeBanner: false,
       ),

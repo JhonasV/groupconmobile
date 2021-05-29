@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:groupcon01/models/group.dart';
 import 'package:groupcon01/screens/create_screen.dart';
 import 'package:groupcon01/screens/dashboard_screen.dart';
+import 'package:groupcon01/screens/send_email_screen.dart';
 import 'package:groupcon01/services/EmailService.dart';
 import 'package:groupcon01/services/GroupService.dart';
 import 'package:groupcon01/widgets/dialogs.dart';
@@ -45,7 +46,7 @@ class _GroupCardState extends State<GroupCard> {
     bool isGroupOwner = widget.currentUserId == widget.group.user;
     return Container(
       width: double.infinity,
-      height: isGroupOwner && widget.areDashboardCards ? 200.0 : 140.0,
+      height: isGroupOwner && widget.areDashboardCards ? 215.0 : 140.0,
       child: Card(
         elevation: 2.0,
         color: _getCardBodyColor(widget.group.url),
@@ -67,10 +68,10 @@ class _GroupCardState extends State<GroupCard> {
               ),
             ),
             Container(
-              padding: widget.group.private
+              padding: widget.group.private && !isGroupOwner
                   ? EdgeInsets.only(top: 10.0)
                   : EdgeInsets.only(left: 15.0),
-              child: widget.group.private
+              child: !widget.areDashboardCards && widget.group.private
                   ? _buildUnlockedButton(context)
                   : _buildCardActions(
                       isGroupOwner, widget.areDashboardCards, context),
@@ -159,18 +160,25 @@ class _GroupCardState extends State<GroupCard> {
   }
 
   showEmailDialog(BuildContext context, String groupId) {
-    final size = MediaQuery.of(context).size;
-    return showDialog(
-        barrierDismissible: !_emailLoaderIndicator,
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            titlePadding: EdgeInsets.all(0),
-            contentPadding: EdgeInsets.all(0),
-            title: _buildAlertDialogTitle(),
-            content: _buildAlertDialogContent(size, context, groupId),
-          );
-        });
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SendEmailScreen(
+          groupId: groupId,
+        ),
+      ),
+    );
+    // final size = MediaQuery.of(context).size;
+    // return showDialog(
+    //     barrierDismissible: !_emailLoaderIndicator,
+    //     context: context,
+    //     builder: (context) {
+    //       return AlertDialog(
+    //         titlePadding: EdgeInsets.all(0),
+    //         contentPadding: EdgeInsets.all(0),
+    //         title: _buildAlertDialogTitle(),
+    //         content: _buildAlertDialogContent(size, context, groupId),
+    //       );
+    //     });
   }
 
   _buildUnlockedButton(BuildContext context) {
@@ -183,7 +191,10 @@ class _GroupCardState extends State<GroupCard> {
               height: 50.0,
               width: MediaQuery.of(context).size.width * .8,
               child: RaisedButton(
-                onPressed: () {},
+                onPressed: () async {
+                  final action = await Dialogs.unlockGroupAlert(context, false);
+                  print(action);
+                },
                 color: _getCardBodyColor(widget.group.url),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,

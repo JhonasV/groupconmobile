@@ -16,9 +16,13 @@ class GroupService {
     String token = sharedPreferences.getString('token');
 
     try {
-      await http.post(url,
-          body: {'name': group.name, 'url': group.url, 'password': ''},
-          headers: {HttpHeaders.authorizationHeader: 'Bearer $token'});
+      await http.post(url, body: {
+        'name': group.name,
+        'url': group.url,
+        'password': group.password
+      }, headers: {
+        HttpHeaders.authorizationHeader: 'Bearer $token'
+      });
     } catch (e) {
       throw Exception(e.message);
     }

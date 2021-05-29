@@ -6,7 +6,7 @@ class Group {
   bool private;
   String password;
 
-  Group({this.id, this.name, this.url, this.user, this.private});
+  Group({this.id, this.name, this.url, this.user, this.private, this.password});
 
   factory Group.fromJson(Map<String, dynamic> json) {
     return Group(

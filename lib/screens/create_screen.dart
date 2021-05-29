@@ -14,14 +14,15 @@ class CreateScreen extends StatefulWidget {
 
 class _CreateScreenState extends State<CreateScreen> {
   var _formKey = GlobalKey<FormState>();
-  String _name, _url, _message = '';
+  String _name, _url, _password, _confirmPassword, _message = '';
   bool _isLoading = false;
 
   _submit() async {
     if (_formKey.currentState.validate()) {
       setState(() => _isLoading = !_isLoading);
       _formKey.currentState.save();
-      await GroupService.create(Group(name: _name, url: _url));
+      await GroupService.create(
+          Group(name: _name, url: _url, password: _password));
       Navigator.of(context).pushNamedAndRemoveUntil(
           DashboardScreen.id, (Route<dynamic> route) => false);
     }
@@ -70,41 +71,33 @@ class _CreateScreenState extends State<CreateScreen> {
           appBar: AppBar(
             title: Text(isUpdating ? 'Update' : 'Create'),
           ),
-          body: Container(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  Expanded(
-                    child: Column(
-                      children: <Widget>[
-                        _isLoading
-                            ? LinearProgressIndicator()
-                            : SizedBox.shrink(),
-                        SizedBox(height: 25.0),
-                        Text(
-                          isUpdating
-                              ? 'Update the group information'
-                              : 'Create a new group',
-                          style: TextStyle(fontSize: 25.0, color: Colors.blue),
-                        ),
-                        SizedBox(height: 10.0),
-                        _message != ''
-                            ? Text(
-                                _message,
-                                style: TextStyle(
-                                    color: Colors.red,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 22.0),
-                              )
-                            : SizedBox.shrink(),
-                        SizedBox(height: 30.0),
-                        _buildFormElements(isUpdating),
-                      ],
-                    ),
+          body: Form(
+            key: _formKey,
+            child: ListView(
+              children: <Widget>[
+                _isLoading ? LinearProgressIndicator() : SizedBox.shrink(),
+                SizedBox(height: 25.0),
+                _buildTitleText(isUpdating),
+                SizedBox(height: 10.0),
+                _message != '' ? _buildMessageText() : SizedBox.shrink(),
+                SizedBox(height: 30.0),
+                _buildNameTextFormField(),
+                SizedBox(height: 10.0),
+                _buildUrlTextFormField(),
+                SizedBox(height: 10.0),
+                _buildPasswordTextFormField(),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextFormField(
+                    onSaved: (input) => _confirmPassword = input.trim(),
+                    decoration: InputDecoration(hintText: 'Confirm password'),
+                    obscureText: true,
+                    validator: (input) =>
+                        _password != input ? 'Password no match' : null,
                   ),
-                ],
-              ),
+                ),
+                _buildFlatButton(isUpdating),
+              ],
             ),
           ),
         ),
@@ -112,48 +105,72 @@ class _CreateScreenState extends State<CreateScreen> {
     );
   }
 
-  _buildFormElements(bool isUpdating) {
-    return Expanded(
-      child: Column(
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextFormField(
-              onSaved: (input) => _name = input.trim(),
-              initialValue: _name,
-              decoration: InputDecoration(hintText: 'Name'),
-              validator: (input) =>
-                  input.length < 5 ? 'Enter a min of 5 characters' : null,
-            ),
-          ),
-          SizedBox(height: 10.0),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextFormField(
-              initialValue: _url,
-              onSaved: (input) => _url = input.trim(),
-              decoration: InputDecoration(hintText: 'URL'),
-              validator: (input) =>
-                  input.length < 10 ? 'Enter a valid URL' : null,
-            ),
-          ),
-          SizedBox(height: 15.0),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 8.0),
-            height: 35.0,
-            width: double.infinity,
-            child: FlatButton(
-              child: Text(
-                isUpdating ? 'UPDATE' : 'SUBMIT',
-                style:
-                    TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-              ),
-              onPressed: () =>
-                  _isLoading ? null : isUpdating ? _update() : _submit(),
-              color: Colors.blue,
-            ),
-          )
-        ],
+  Text _buildTitleText(bool isUpdating) {
+    return Text(
+      isUpdating ? 'Update the group information' : 'Create a new group',
+      style: TextStyle(fontSize: 25.0, color: Colors.blue),
+    );
+  }
+
+  Text _buildMessageText() {
+    return Text(
+      _message,
+      style: TextStyle(
+          color: Colors.red, fontWeight: FontWeight.bold, fontSize: 22.0),
+    );
+  }
+
+  Padding _buildNameTextFormField() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: TextFormField(
+        onSaved: (input) => _name = input.trim(),
+        initialValue: _name,
+        decoration: InputDecoration(hintText: 'Name'),
+        validator: (input) =>
+            input.length < 5 ? 'Enter a min of 5 characters' : null,
+      ),
+    );
+  }
+
+  Padding _buildUrlTextFormField() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: TextFormField(
+        initialValue: _url,
+        onSaved: (input) => _url = input.trim(),
+        decoration: InputDecoration(hintText: 'URL'),
+        validator: (input) => input.length < 10 ? 'Enter a valid URL' : null,
+      ),
+    );
+  }
+
+  Padding _buildPasswordTextFormField() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: TextFormField(
+        onSaved: (input) => _password = input.trim(),
+        onChanged: (input) => _password = input.trim(),
+        decoration: InputDecoration(hintText: 'Password'),
+        obscureText: true,
+        validator: (input) =>
+            input.length < 5 ? 'The password must have 5 characters min' : null,
+      ),
+    );
+  }
+
+  _buildFlatButton(bool isUpdating) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.0),
+      height: 35.0,
+      width: double.infinity,
+      child: FlatButton(
+        child: Text(
+          isUpdating ? 'UPDATE' : 'SUBMIT',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+        onPressed: () => _isLoading ? null : isUpdating ? _update() : _submit(),
+        color: Colors.blue,
       ),
     );
   }

@@ -41,69 +41,91 @@ class Dialogs {
     return (action != null) ? action : DialogAction.abort;
   }
 
-  static Future<AlertDialog> emailDialog(
-      BuildContext context, Group group) async {
-    final size = MediaQuery.of(context).size;
-    final action = showDialog(
+  static Future<DialogAction> unlockGroupAlert(
+      BuildContext context, bool isLoading) async {
+    Size size = MediaQuery.of(context).size;
+    final action = await showDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
+      builder: (context) {
         return AlertDialog(
-          titlePadding: EdgeInsets.all(0),
-          contentPadding: EdgeInsets.all(0),
+          actions: <Widget>[
+            Container(
+              padding: EdgeInsets.zero,
+              width: size.width * 1,
+              height: size.height * .09,
+              color: Colors.blue,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: <Widget>[
+                  Container(
+                    width: size.width * .2,
+                    child: RaisedButton(
+                      color: Colors.white,
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                            color: Colors.black, fontWeight: FontWeight.bold),
+                      ),
+                      onPressed: () =>
+                          Navigator.of(context).pop(DialogAction.abort),
+                    ),
+                  ),
+                  SizedBox(width: 10.0),
+                ],
+              ),
+            )
+          ],
+          titlePadding: EdgeInsets.zero,
           title: Container(
+            height: size.height * .08,
             padding: EdgeInsets.all(15.0),
-            height: 50.0,
-            width: double.infinity,
             color: Colors.blue,
-            child: Text('Send invite link',
-                style: TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold)),
+            child: Text(
+              'Unlock the group',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 20.0,
+              ),
+            ),
           ),
           content: Container(
-            width: size.width * 1.0,
-            height: size.height * 0.4,
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Spacer(),
-                Container(
-                  width: double.infinity,
-                  height: 50.0,
-                  color: Colors.blue,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Container(
-                        width: 120.0,
-                        height: 30.0,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.all(Radius.circular(30.0)),
+            height: size.height * .2,
+            padding: EdgeInsets.symmetric(vertical: 15.0),
+            child: isLoading
+                ? Center(child: CircularProgressIndicator())
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Group Password...',
                         ),
-                        padding: EdgeInsets.only(right: 10.0),
-                        child: FlatButton(
-                          color: Colors.white,
-                          onPressed: () => null,
-                          // _emailLoaderIndicator ? null : Navigator.of(context).pop(),
+                        obscureText: true,
+                      ),
+                      SizedBox(height: 10.0),
+                      Container(
+                        height: 35.0,
+                        width: double.infinity,
+                        child: RaisedButton(
+                          onPressed: () {},
                           child: Text(
-                            'Close',
+                            'Unlock',
                             style: TextStyle(
-                              color: Colors.black54,
-                              fontSize: 16.0,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 17.0,
                             ),
                           ),
+                          color: Colors.blue,
                         ),
-                      ),
+                      )
                     ],
                   ),
-                ),
-              ],
-            ),
           ),
         );
       },
     );
+    return action;
   }
 }
